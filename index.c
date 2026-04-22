@@ -16,6 +16,8 @@
 // TODO functions:     index_load, index_save, index_add
 
 #include "index.h"
+#include <errno.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,6 +27,8 @@
 #include <dirent.h>
 
 // ─── PROVIDED ────────────────────────────────────────────────────────────────
+
+int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out);
 
 // Find an index entry by path (linear scan).
 IndexEntry* index_find(Index *index, const char *path) {
