@@ -219,7 +219,25 @@ int index_save(const Index *index) {
             return -1;
         }
     }
-    return -1;
+    fflush(f);
+    if (fsync(fileno(f)) != 0) {
+        free(sorted_entries);
+        fclose(f);
+        unlink(tmp_path);
+        return -1;
+    }
+    if (fclose(f) != 0) {
+        free(sorted_entries);
+        unlink(tmp_path);
+        return -1;
+    }
+    if (rename(tmp_path, INDEX_FILE) != 0) {
+        free(sorted_entries);
+        unlink(tmp_path);
+        return -1;
+    }
+    free(sorted_entries);
+    return 0;
 }
 
 // Stage a file for the next commit.
