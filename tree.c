@@ -135,7 +135,7 @@ int tree_serialize(const Tree *tree, void **data_out, size_t *len_out) {
 // Returns 0 on success, -1 on error.
 
 static int build_tree_level(const TreeIndex *index, const char *prefix, ObjectID *id_out) {
-    Tree tree;
+        Tree tree;
     tree.count = 0;
     size_t prefix_len = strlen(prefix);
     for (int i = 0; i < index->count; i++) {
@@ -181,7 +181,14 @@ static int build_tree_level(const TreeIndex *index, const char *prefix, ObjectID
         entry->hash = child_id;
         snprintf(entry->name, sizeof(entry->name), "%s", dir_name);
     }
-    return 0;
+    if (tree.count == 0) return -1;
+    void *data = NULL;
+    size_t len = 0;
+    if (tree_serialize(&tree, &data, &len) != 0) return -1;
+
+    int rc = object_write(OBJ_TREE, data, len, id_out);
+    free(data);
+    return rc;
         
 }
 
