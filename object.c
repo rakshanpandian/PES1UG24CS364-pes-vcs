@@ -218,6 +218,27 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
 // Returns 0 on success, -1 on error (file not found, corrupt, etc.).
 int object_read(const ObjectID *id, ObjectType *type_out, void **data_out, size_t *len_out) {
     // TODO: Implement
-    (void)id; (void)type_out; (void)data_out; (void)len_out;
+    if (!id || !type_out || !data_out || !len_out) return -1;
+
+    char path[512];
+    object_path(id, path, sizeof(path));
+
+    FILE *f = fopen(path, "rb");
+    if (!f) return -1;
+
+    if (fseek(f, 0, SEEK_END) != 0) { fclose(f); return -1; }
+    long file_len = ftell(f);
+    if (file_len < 0) { fclose(f); return -1; }
+    rewind(f);
+
+    uint8_t *buf = malloc((size_t)file_len);
+    if (!buf) { fclose(f); return -1; }
+
+    if (fread(buf, 1, (size_t)file_len, f) != (size_t)file_len) {
+        free(buf);
+        fclose(f);
+        return -1;
+    }
+    fclose(f);
     return -1;
 }
