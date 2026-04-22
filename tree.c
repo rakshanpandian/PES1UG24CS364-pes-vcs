@@ -28,6 +28,17 @@
 
 int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out);
 
+typedef struct {
+    uint32_t mode;
+    ObjectID hash;
+    char path[512];
+} TreeIndexEntry;
+
+typedef struct {
+    TreeIndexEntry entries[10000];
+    int count;
+} TreeIndex;
+
 // Determine the object mode for a filesystem path.
 uint32_t get_file_mode(const char *path) {
     struct stat st;
