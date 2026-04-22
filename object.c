@@ -192,7 +192,6 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     free(full_obj);
     return 0;
 }
-}
 
 // Read an object from the store.
 //
