@@ -9,6 +9,7 @@
 // TODO functions:     object_write, object_read
 
 #include "pes.h"
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -95,7 +96,8 @@ int object_exists(const ObjectID *id) {
 // Returns 0 on success, -1 on error.
 int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out) {
     // TODO: Implement
-    (void)type; (void)data; (void)len; (void)id_out;
+    if (!id_out) return -1;
+    if (!data && len > 0) return -1;
     return -1;
 }
 
