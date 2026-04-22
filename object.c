@@ -240,5 +240,39 @@ int object_read(const ObjectID *id, ObjectType *type_out, void **data_out, size_
         return -1;
     }
     fclose(f);
-    return -1;
+
+    uint8_t *header_end = memchr(buf, '\0', (size_t)file_len);
+    if (!header_end) { free(buf); return -1; }
+
+    char header[64];
+    size_t header_len = (size_t)(header_end - buf);
+    if (header_len >= sizeof(header)) { free(buf); return -1; }
+    memcpy(header, buf, header_len);
+    header[header_len] = '\0';
+
+    char type_str[16];
+    size_t object_size = 0;
+    if (sscanf(header, "%15s %zu", type_str, &object_size) != 2) { free(buf); return -1; }
+
+    if (strcmp(type_str, "blob") == 0) *type_out = OBJ_BLOB;
+    else if (strcmp(type_str, "tree") == 0) *type_out = OBJ_TREE;
+    else if (strcmp(type_str, "commit") == 0) *type_out = OBJ_COMMIT;
+    else { free(buf); return -1; }
+
+    size_t data_len = (size_t)file_len - header_len - 1;
+    if (data_len != object_size) { free(buf); return -1; }
+
+    ObjectID computed_id;
+    compute_hash(buf, (size_t)file_len, &computed_id);
+    if (memcmp(&computed_id, id, sizeof(ObjectID)) != 0) { free(buf); return -1; }
+
+    uint8_t *data = malloc(data_len > 0 ? data_len : 1);
+    if (!data) { free(buf); return -1; }
+    if (data_len > 0) memcpy(data, header_end + 1, data_len);
+
+    *data_out = data;
+    *len_out = data_len;
+
+    free(buf);
+    return 0;
 }
