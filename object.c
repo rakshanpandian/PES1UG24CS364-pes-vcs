@@ -98,6 +98,36 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     // TODO: Implement
     if (!id_out) return -1;
     if (!data && len > 0) return -1;
+    const char *type_str;
+    switch (type) {
+        case OBJ_BLOB: type_str = "blob"; break;
+        case OBJ_TREE: type_str = "tree"; break;
+        case OBJ_COMMIT: type_str = "commit"; break;
+        default: return -1;
+    }
+
+    char header[64];
+    int header_written = snprintf(header, sizeof(header), "%s %zu", type_str, len);
+    if (header_written < 0 || (size_t)header_written >= sizeof(header) - 1) return -1;
+    size_t header_len = (size_t)header_written + 1;
+
+    size_t full_len = header_len + len;
+    uint8_t *full_obj = malloc(full_len);
+    if (!full_obj) return -1;
+
+    memcpy(full_obj, header, header_len);
+    if (len > 0) memcpy(full_obj + header_len, data, len);
+
+    compute_hash(full_obj, full_len, id_out);
+    if (object_exists(id_out)) {
+        free(full_obj);
+        return 0;
+    }
+
+    if (mkdir(OBJECTS_DIR, 0755) != 0 && errno != EEXIST) {
+        free(full_obj);
+        return -1;
+    }
     return -1;
 }
 
